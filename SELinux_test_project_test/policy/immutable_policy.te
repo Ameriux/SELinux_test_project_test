@@ -1,0 +1,42 @@
+## 不可变文件测试策略
+policy_module(immutable_test, 1.0)
+
+# 定义类型
+type immutable_file_t;
+type immutable_service_t;
+type immutable_service_exec_t;
+type immutable_client_t;
+type immutable_data_dir_t;
+
+# 设置基本属性
+typeattribute immutable_file_t file_type;
+typeattribute immutable_service_t domain;
+typeattribute immutable_client_t domain;
+typeattribute immutable_data_dir_t file_type;
+
+# 设置测试目录 - permissive模式
+permissive immutable_service_t;
+
+# 定义服务进程的初始域（系统启动时）
+type immutable_init_t;
+domain_auto_trans(init_t, immutable_service_exec_t, immutable_service_t);
+
+# 不可变文件权限
+allow immutable_service_t immutable_file_t:file { getattr open read write append unlink };
+neverallow { domain -immutable_service_t } immutable_file_t:file { write append unlink };
+allow domain immutable_file_t:file { getattr open read };
+
+# 数据目录权限
+allow immutable_service_t immutable_data_dir_t:dir { add_name remove_name read write search };
+allow immutable_client_t immutable_data_dir_t:dir { read search };
+
+# 客户端与服务通信
+allow immutable_client_t immutable_service_t:unix_stream_socket connectto;
+allow immutable_service_t immutable_client_t:unix_stream_socket { read write };
+
+# 审计规则 - 记录所有对不可变文件的修改尝试
+auditallow { domain -immutable_service_t } immutable_file_t:file { write append unlink };
+
+# 增量更新权限 (rsync)
+allow immutable_service_t self:process { fork execmem };
+allow immutable_service_t bin_t:file { execute execute_no_trans }; 
