@@ -30,7 +30,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/SELinux_test_project_test.git
+git clone https://github.com/Amireux/SELinux_test_project_test.git
 cd SELinux_test_project_test
 
 # 运行安装脚本
